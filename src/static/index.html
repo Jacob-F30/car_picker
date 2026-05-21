@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Car Picker</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; max-width: 760px; }
+    form { display: grid; gap: 0.75rem; }
+    label { display: grid; gap: 0.25rem; }
+    button { width: fit-content; padding: 0.5rem 1rem; }
+    pre { white-space: pre-wrap; background: #f6f8fa; padding: 1rem; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Car Picker</h1>
+  <form id="car-form">
+    <label>
+      Purpose
+      <select name="purpose" required>
+        <option value="commute">Commute</option>
+        <option value="sport">Sport</option>
+        <option value="family">Family</option>
+        <option value="leisure">Leisure</option>
+        <option value="business">Business</option>
+      </select>
+    </label>
+    <label>
+      Budget (NZD)
+      <input name="budget" type="number" min="0" value="15000" required />
+    </label>
+    <label>
+      Years to keep
+      <input name="years_to_keep" type="number" min="0" value="5" required />
+    </label>
+    <label>
+      <input name="is_first_car" type="checkbox" />
+      First car
+    </label>
+    <button type="submit">Get recommendations</button>
+  </form>
+
+  <h2>Result</h2>
+  <pre id="result">Submit the form to see recommendations.</pre>
+
+  <script>
+    const form = document.getElementById('car-form');
+    const result = document.getElementById('result');
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      result.textContent = 'Loading...';
+
+      const formData = new FormData(form);
+      const payload = {
+        purpose: String(formData.get('purpose')),
+        budget: Number(formData.get('budget')),
+        years_to_keep: Number(formData.get('years_to_keep')),
+        is_first_car: formData.get('is_first_car') === 'on',
+        top_n: 3,
+      };
+
+      try {
+        const response = await fetch('/api/recommendations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          result.textContent = `Request failed: ${response.status}`;
+          return;
+        }
+
+        const data = await response.json();
+        result.textContent = data.markdown;
+      } catch (error) {
+        result.textContent = `Request error: ${error}`;
+      }
+    });
+  </script>
+</body>
+</html>
