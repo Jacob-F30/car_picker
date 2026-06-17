@@ -45,8 +45,15 @@ def format_recommendations(
 
     purpose = str(user_inputs.get("purpose", "")).lower()
     budget = float(user_inputs.get("budget", 0))
+    fallback_mode = any(car.get("recommendation_mode") == "fallback" for car in top_cars)
 
-    lines = ["## Top Car Recommendations (NZ Market)"]
+    lines = [
+        "## Best available car matches" if fallback_mode else "## Top Car Recommendations (NZ Market)"
+    ]
+    if fallback_mode:
+        lines.append(
+            "These options relax one or more filters so you still get a useful shortlist."
+        )
     for idx, car in enumerate(top_cars[:3], start=1):
         year_bracket = _fit_year_bracket(car, budget)
         issues = car.get("critical_issues", [])
