@@ -1,44 +1,56 @@
-import React, { useEffect, useState } from "react";
-import { recommendCars } from "./lib/recommendation";
+import React, { useDeferredValue, useEffect, useState } from "react";
+import {
+  getBrands,
+  getRecommendations,
+  type Recommendation,
+  type RecommendationInputs,
+} from "./lib/recommendation";
 import { RecommendationCard } from "./components/RecommendationCard";
 
-type Inputs = {
-  purpose: string;
-  budget: number;
-  isFirstCar: boolean;
-  yearsToKeep: number;
-  fuelType: string;
-  brandPreference: string;
-};
-
 export default function App() {
-  const [cars, setCars] = useState<any[]>([]);
+  const [brands, setBrands] = useState<string[]>([]);
+  const [top, setTop] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [inputs, setInputs] = useState<Inputs>({
+  const [inputs, setInputs] = useState<RecommendationInputs>({
     purpose: "commute",
     budget: 15000,
     isFirstCar: false,
-    yearsToKeep: 3,
-    fuelType: "any",
+    powertrainPreference: "any",
     brandPreference: "any",
   });
+  const deferredInputs = useDeferredValue(inputs);
 
-  const fuelTypeOptions = ["any", ...new Set(cars.map((car) => String(car?.fuel_type ?? "").trim()).filter(Boolean))];
-  const brandOptions = ["any", ...new Set(cars.map((car) => String(car?.make ?? "").trim()).filter(Boolean))];
+  const brandOptions = ["any", ...brands];
 
   useEffect(() => {
-    const dataUrl = `${import.meta.env.BASE_URL}data/cars_db.json`;
-
-    fetch(dataUrl)
-      .then((r) => r.json())
-      .then((d) => setCars(d))
-      .catch(() => setLoadError("Could not load the car database. Please refresh and try again."))
-      .finally(() => setLoading(false));
+    const controller = new AbortController();
+    getBrands(controller.signal)
+      .then(setBrands)
+      .catch((error: unknown) => {
+        if ((error as Error).name !== "AbortError") {
+          setLoadError("Could not load available brands from the recommendation service.");
+        }
+      });
+    return () => controller.abort();
   }, []);
 
-  const top = recommendCars(inputs as any, cars, 3);
-  const hasFallback = top.some((car: any) => car.recommendation_mode === "fallback");
+  useEffect(() => {
+    const controller = new AbortController();
+    setLoading(true);
+    setLoadError(null);
+    getRecommendations(deferredInputs, controller.signal)
+      .then(setTop)
+      .catch((error: unknown) => {
+        if ((error as Error).name !== "AbortError") {
+          setLoadError("Could not load recommendations. Check that the local API is running.");
+        }
+      })
+      .finally(() => setLoading(false));
+    return () => controller.abort();
+  }, [deferredInputs]);
+
+  const hasFallback = top.some((car) => car.recommendation_mode === "fallback");
 
   return (
     <div className="app-shell">
@@ -47,7 +59,7 @@ export default function App() {
           <p className="eyebrow">NZ car picker</p>
           <h1>Find a car that fits how you actually drive.</h1>
           <p className="hero-copy">
-            Use guided filters, not free-text guesswork. Pick the vibe, budget band, fuel type,
+            Use guided filters, not free-text guesswork. Pick the vibe, budget band, powertrain,
             and brand preference, then let the ranking do the rest.
           </p>
         </header>
@@ -83,16 +95,15 @@ export default function App() {
             </label>
 
             <label>
-              Fuel type
+              Powertrain
               <select
-                value={inputs.fuelType}
-                onChange={(e) => setInputs({ ...inputs, fuelType: e.target.value })}
+                value={inputs.powertrainPreference}
+                onChange={(e) => setInputs({ ...inputs, powertrainPreference: e.target.value })}
               >
-                {fuelTypeOptions.map((fuelType) => (
-                  <option key={fuelType} value={fuelType}>
-                    {fuelType === "any" ? "Any fuel type" : fuelType}
-                  </option>
-                ))}
+                <option value="any">I don't know</option>
+                <option value="ev">EV</option>
+                <option value="non_ev">Non-EV (Petrol, Diesel, mild hybrid)</option>
+                <option value="plug_in_hybrid">Plug-in hybrid</option>
               </select>
             </label>
 
@@ -119,20 +130,6 @@ export default function App() {
               />
             </label>
 
-            <label>
-              Years to keep
-              <div className="range-wrap">
-                <input
-                  type="range"
-                  min={1}
-                  max={10}
-                  step={1}
-                  value={inputs.yearsToKeep}
-                  onChange={(e) => setInputs({ ...inputs, yearsToKeep: Number(e.target.value) })}
-                />
-                <span>{inputs.yearsToKeep} years</span>
-              </div>
-            </label>
           </div>
         </section>
 
@@ -152,13 +149,12 @@ export default function App() {
                 No suitable cars found. Try widening the budget or relaxing a filter.
               </div>
             ) : (
-              top.map((car: any, i: number) => (
+              top.map((car, i) => (
                 <RecommendationCard
                   key={`${car.make}-${car.model}-${i}`}
                   car={car}
                   rank={i + 1}
                   purpose={inputs.purpose}
-                  budget={inputs.budget}
                 />
               ))
             )}

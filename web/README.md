@@ -1,8 +1,15 @@
 # Car Picker Frontend
 
-This is a minimal Vite + React + TypeScript frontend port of the Python rule-based car picker. It loads `public/data/cars_db.json`, runs the recommendation logic client-side, and renders results.
+This Vite + React + TypeScript frontend renders recommendations from the canonical Python engine. It does not score cars in the browser or load the legacy five-car fixture.
 
 Quick start:
+
+```bash
+cd ..
+python -m src.api
+```
+
+In a second terminal:
 
 ```bash
 cd web
@@ -11,14 +18,15 @@ npm run dev
 # open http://localhost:5173
 ```
 
-Build & deploy to GitHub Pages (simple):
+The Vite development server proxies `/api` to `http://127.0.0.1:8000`. For a separately hosted API, set `VITE_API_BASE_URL` to that API's `/api` base URL before building.
+
+Build the frontend:
 
 ```bash
 cd web
 npm run build
-npm run deploy
 ```
 
 Notes:
-- `vite.config.ts` sets `base` to `/car_picker/` for GitHub Pages; change if your repo name differs.
-- For CI deploy use a GitHub Actions workflow to build and publish `dist/`.
+- `vite.config.ts` sets `base` to `/car_picker/`; change it if the deployment path differs.
+- A static GitHub Pages deployment needs an independently hosted Python API configured through `VITE_API_BASE_URL`.

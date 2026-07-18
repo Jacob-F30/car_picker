@@ -54,16 +54,27 @@ def format_recommendations(
         lines.append(
             "These options relax one or more filters so you still get a useful shortlist."
         )
-    for idx, car in enumerate(top_cars[:3], start=1):
+    for idx, car in enumerate(top_cars[:10], start=1):
         year_bracket = _fit_year_bracket(car, budget)
         issues = car.get("critical_issues", [])
         issues_text = "\n".join(f"- {issue}" for issue in issues) or "- None listed"
+        score_breakdown = car.get("score_breakdown", [])
+        rewards = [
+            item["reason"]
+            for item in score_breakdown
+            if item.get("score", 0) > 0
+        ][:3]
+        penalties = car.get("penalty_reasons", [])[:2]
+        rewards_text = ", ".join(rewards) if rewards else "No scored advantages recorded"
+        penalties_text = ", ".join(penalties) if penalties else "None"
 
         lines.extend(
             [
                 f"\n### {idx}. {car['make']} {car['model']} ({car['generation']})",
                 f"- **Year bracket in budget**: {year_bracket}",
                 f"- **Purpose fit**: {_purpose_fit_text(car, purpose)}",
+                f"- **Top ranking factors**: {rewards_text}",
+                f"- **Penalties**: {penalties_text}",
                 "- **Warnings (common issues)**:",
                 issues_text,
                 (
