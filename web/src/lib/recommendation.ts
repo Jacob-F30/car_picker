@@ -45,42 +45,64 @@ export type RecommendationInputs = {
   brandPreference: string;
 };
 
-type StaticCar = {
+type CatalogCar = {
   make: string | null;
   model: string | null;
-  generation?: string | null;
-  year_range?: [number | null, number | null] | null;
-  avg_nz_price?: number | null;
-  motto?: string | null;
-  is_good_first_car?: boolean | null;
-  engine_size?: number | null;
-  fuel_type?: string | null;
-  torque_nm?: number | null;
-  doors?: number | null;
-  seats?: number | null;
-  fuel_consumption_l_100km?: number | null;
+  trim: string | null;
+  year: number | null;
+  body_style: string | null;
+  fuel_type: string | null;
+  engine_type: string | null;
+  powertrain_category: string | null;
+  engine_displacement_cc: number | null;
+  engine_displacement_l: number | null;
+  engine_power_kw: number | null;
+  torque_nm: number | null;
+  transmission: string | null;
+  doors: number | null;
+  seats: number | null;
+  fuel_consumption_l_100km: number | null;
+  safety_stars: number | null;
+  safety_rating: number | null;
+  brand_region: string | null;
+  data_quality?: { eligible?: boolean; confidence?: number } | null;
 };
 
-const apiBase = (import.meta.env.VITE_API_BASE_URL || "/api").replace(/\/$/, "");
-const fallbackDatasetPath = `${import.meta.env.BASE_URL}data/cars_db.json`;
-let fallbackCatalogPromise: Promise<StaticCar[]> | null = null;
+const catalogDatasetPath = `${import.meta.env.BASE_URL}data/cars_normalized.json`;
+let catalogPromise: Promise<CatalogCar[]> | null = null;
 
-async function request<T>(path: string, query: Record<string, string>, signal?: AbortSignal): Promise<T> {
-  const url = new URL(`${apiBase}${path}`, window.location.origin);
-  Object.entries(query).forEach(([key, value]) => url.searchParams.set(key, value));
-
-  const response = await fetch(url, { signal });
-  if (!response.ok) {
-    throw new Error(`Recommendation service returned ${response.status}.`);
-  }
-  return response.json() as Promise<T>;
+function normalizePowertrainPreference(value: string): string {
+  const normalized = (value || "any").trim().toLowerCase();
+  return normalized === "ev" || normalized === "plug_in_hybrid" || normalized === "non_ev"
+    ? normalized
+    : "any";
 }
 
-function normalizePowertrainCategory(fuelType: string | null | undefined): string | null {
-  const value = (fuelType || "").toLowerCase();
-  if (!value) return null;
-  if (value.includes("plug") && value.includes("hybrid")) return "plug_in_hybrid";
-  if (value.includes("ev") || value.includes("electric")) return "ev";
+function loadCatalog(signal?: AbortSignal): Promise<CatalogCar[]> {
+  if (!catalogPromise) {
+    catalogPromise = fetch(new URL(catalogDatasetPath, window.location.origin), { signal })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Catalog returned ${response.status}.`);
+        }
+        return response.json() as Promise<unknown>;
+      })
+      .then((rows) => {
+        if (!Array.isArray(rows)) return [];
+        return rows as CatalogCar[];
+      });
+  }
+  return catalogPromise;
+}
+
+function normalizePowertrainCategory(value: string | null | undefined): string | null {
+  const normalized = (value || "").trim().toLowerCase();
+  if (!normalized) return null;
+  if (normalized === "ev" || normalized === "plug_in_hybrid" || normalized === "non_ev") {
+    return normalized;
+  }
+  if (normalized.includes("plug") && normalized.includes("hybrid")) return "plug_in_hybrid";
+  if (normalized.includes("ev") || normalized.includes("electric")) return "ev";
   return "non_ev";
 }
 
@@ -88,43 +110,14 @@ function scoreFactor(factor: string, score: number, reason: string): ScoreFactor
   return { factor, score, reason };
 }
 
-function purposeKeywords(purpose: string): string[] {
-  switch (purpose) {
-    case "family":
-      return ["family", "comfort", "safe", "space", "practical"];
-    case "sport":
-      return ["sport", "performance", "agile", "driver", "quick"];
-    case "leisure":
-      return ["leisure", "touring", "comfort", "weekend"];
-    case "commute":
-    default:
-      return ["eco", "daily", "city", "comfort", "economy"];
-  }
-}
-
-function estimateMatchScore(car: StaticCar, inputs: RecommendationInputs): {
+function estimateMatchScore(car: CatalogCar, inputs: RecommendationInputs): {
   score: number;
   factors: ScoreFactor[];
   penalties: string[];
 } {
-  let total = 35;
+  let total = 45;
   const factors: ScoreFactor[] = [];
   const penalties: string[] = [];
-
-  if (car.avg_nz_price != null) {
-    const priceDelta = car.avg_nz_price - inputs.budget;
-    if (priceDelta <= 0) {
-      total += 18;
-      factors.push(scoreFactor("budget_fit", 18, "Within budget"));
-    } else if (priceDelta <= 2500) {
-      total += 5;
-      factors.push(scoreFactor("budget_fit", 5, "Slightly above budget"));
-      penalties.push("Slightly above your budget");
-    } else {
-      total -= 12;
-      penalties.push("Over your budget");
-    }
-  }
 
   if (car.fuel_consumption_l_100km != null) {
     if (car.fuel_consumption_l_100km <= 5.5) {
@@ -138,24 +131,80 @@ function estimateMatchScore(car: StaticCar, inputs: RecommendationInputs): {
     }
   }
 
-  if (inputs.isFirstCar && car.is_good_first_car === true) {
-    total += 10;
-    factors.push(scoreFactor("first_car_fit", 10, "Commonly suitable as a first car"));
-  } else if (inputs.isFirstCar && car.is_good_first_car === false) {
-    total -= 8;
-    penalties.push("Not usually ideal as a first car");
+  if (inputs.isFirstCar) {
+    if ((car.year ?? 0) >= 2018) {
+      total += 6;
+      factors.push(scoreFactor("first_car_age", 6, "Modern safety-era model"));
+    }
+    if (car.engine_power_kw != null) {
+      if (car.engine_power_kw <= 130) {
+        total += 5;
+        factors.push(scoreFactor("first_car_power", 5, "Manageable power for new drivers"));
+      } else if (car.engine_power_kw >= 220) {
+        total -= 6;
+        penalties.push("Higher power may be less forgiving for a first car");
+      }
+    }
   }
 
-  const keywords = purposeKeywords(inputs.purpose);
-  const motto = (car.motto || "").toLowerCase();
-  const purposeHits = keywords.filter((word) => motto.includes(word)).length;
-  if (purposeHits > 0) {
-    const purposeScore = Math.min(12, purposeHits * 4);
-    total += purposeScore;
-    factors.push(scoreFactor(`${inputs.purpose}_fit`, purposeScore, `Matches ${inputs.purpose} priorities`));
+  const bodyStyle = (car.body_style || "").toLowerCase();
+  if (inputs.purpose === "family") {
+    if ((car.seats ?? 0) >= 7) {
+      total += 16;
+      factors.push(scoreFactor("family_space", 16, "Strong family seating capacity"));
+    } else if ((car.seats ?? 0) >= 5) {
+      total += 10;
+      factors.push(scoreFactor("family_space", 10, "Suitable seating for family use"));
+    } else {
+      total -= 12;
+      penalties.push("Limited seating for family use");
+    }
+    if ((car.doors ?? 0) >= 5) {
+      total += 7;
+      factors.push(scoreFactor("family_access", 7, "Easy access with 5 doors"));
+    }
+    if ((car.safety_rating ?? 0) >= 5) {
+      total += 10;
+      factors.push(scoreFactor("family_safety", 10, "Top-tier safety rating"));
+    }
+  } else if (inputs.purpose === "sport") {
+    if ((car.engine_power_kw ?? 0) >= 220) {
+      total += 16;
+      factors.push(scoreFactor("sport_power", 16, "High power output"));
+    } else if ((car.engine_power_kw ?? 0) >= 170) {
+      total += 10;
+      factors.push(scoreFactor("sport_power", 10, "Strong power output"));
+    }
+    if (bodyStyle.includes("coupe") || bodyStyle.includes("sport")) {
+      total += 6;
+      factors.push(scoreFactor("sport_body", 6, "Sport-oriented body style"));
+    }
+  } else if (inputs.purpose === "leisure") {
+    if (
+      bodyStyle.includes("suv") ||
+      bodyStyle.includes("wagon") ||
+      bodyStyle.includes("ute") ||
+      bodyStyle.includes("pickup")
+    ) {
+      total += 10;
+      factors.push(scoreFactor("leisure_utility", 10, "Practical body style for leisure trips"));
+    }
+    if ((car.seats ?? 0) >= 5) {
+      total += 6;
+      factors.push(scoreFactor("leisure_space", 6, "Comfortable passenger capacity"));
+    }
+  } else {
+    if (car.fuel_consumption_l_100km != null && car.fuel_consumption_l_100km <= 6.5) {
+      total += 10;
+      factors.push(scoreFactor("commute_efficiency", 10, "Efficient for daily commuting"));
+    }
+    if (car.powertrain_category === "ev" || car.powertrain_category === "plug_in_hybrid") {
+      total += 6;
+      factors.push(scoreFactor("commute_powertrain", 6, "Electrified powertrain suits city driving"));
+    }
   }
 
-  const powertrain = normalizePowertrainCategory(car.fuel_type);
+  const powertrain = normalizePowertrainCategory(car.powertrain_category ?? car.fuel_type);
   if (inputs.powertrainPreference !== "any") {
     if (inputs.powertrainPreference === powertrain) {
       total += 8;
@@ -166,12 +215,11 @@ function estimateMatchScore(car: StaticCar, inputs: RecommendationInputs): {
     }
   }
 
-  if (car.seats != null && inputs.purpose === "family") {
-    if (car.seats >= 5) {
-      total += 6;
-      factors.push(scoreFactor("space", 6, "Good seating for family use"));
-    } else {
-      penalties.push("Limited seating for family use");
+  if (car.data_quality?.confidence != null) {
+    const confidenceBoost = Math.round((car.data_quality.confidence - 0.7) * 10);
+    if (confidenceBoost > 0) {
+      total += confidenceBoost;
+      factors.push(scoreFactor("data_confidence", confidenceBoost, "High data confidence"));
     }
   }
 
@@ -182,62 +230,43 @@ function estimateMatchScore(car: StaticCar, inputs: RecommendationInputs): {
   };
 }
 
-function staticToRecommendation(car: StaticCar, inputs: RecommendationInputs): Recommendation {
+function staticToRecommendation(car: CatalogCar, inputs: RecommendationInputs, mode: "strict" | "fallback"): Recommendation {
   const scoring = estimateMatchScore(car, inputs);
-  const powertrain = normalizePowertrainCategory(car.fuel_type);
-  const startYear = car.year_range?.[0] ?? null;
+  const powertrain = normalizePowertrainCategory(car.powertrain_category ?? car.fuel_type);
 
   return {
     make: car.make,
     model: car.model,
-    trim: car.generation ?? null,
-    year: startYear,
-    body_style: null,
+    trim: car.trim,
+    year: car.year,
+    body_style: car.body_style,
     fuel_type: car.fuel_type ?? null,
-    engine_type: null,
+    engine_type: car.engine_type,
     powertrain_category: powertrain,
-    engine_displacement_cc:
-      car.engine_size != null ? Math.round(car.engine_size * 1000) : null,
-    engine_displacement_l: car.engine_size ?? null,
-    engine_power_kw: null,
+    engine_displacement_cc: car.engine_displacement_cc,
+    engine_displacement_l: car.engine_displacement_l,
+    engine_power_kw: car.engine_power_kw,
     torque_nm: car.torque_nm ?? null,
-    transmission: null,
+    transmission: car.transmission,
     doors: car.doors ?? null,
     seats: car.seats ?? null,
     fuel_consumption_l_100km: car.fuel_consumption_l_100km ?? null,
-    safety_stars: null,
-    safety_rating: null,
-    brand_region: null,
-    data_quality: { eligible: true, confidence: 0.65 },
+    safety_stars: car.safety_stars,
+    safety_rating: car.safety_rating,
+    brand_region: car.brand_region,
+    data_quality: car.data_quality ?? null,
     match_score: scoring.score,
     purpose_strengths: {
       [inputs.purpose]: { score: scoring.score, factors: scoring.factors },
     },
     score_breakdown: scoring.factors,
     penalty_reasons: scoring.penalties,
-    recommendation_mode: "fallback",
+    recommendation_mode: mode,
   };
 }
 
-async function loadFallbackCatalog(signal?: AbortSignal): Promise<StaticCar[]> {
-  if (!fallbackCatalogPromise) {
-    fallbackCatalogPromise = fetch(new URL(fallbackDatasetPath, window.location.origin), { signal })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Fallback catalog returned ${response.status}.`);
-        }
-        return response.json() as Promise<unknown>;
-      })
-      .then((rows) => {
-        if (!Array.isArray(rows)) return [];
-        return rows as StaticCar[];
-      });
-  }
-  return fallbackCatalogPromise;
-}
-
 async function getBrandsFallback(signal?: AbortSignal): Promise<string[]> {
-  const rows = await loadFallbackCatalog(signal);
+  const rows = await loadCatalog(signal);
   return [...new Set(rows.map((row) => (row.make || "").trim()).filter(Boolean))].sort((a, b) =>
     a.localeCompare(b)
   );
@@ -247,58 +276,43 @@ async function getRecommendationsFallback(
   inputs: RecommendationInputs,
   signal?: AbortSignal
 ): Promise<Recommendation[]> {
-  const rows = await loadFallbackCatalog(signal);
-  const filtered = rows.filter((row) => {
+  const normalizedPowertrainPreference = normalizePowertrainPreference(inputs.powertrainPreference);
+  const rows = await loadCatalog(signal);
+  const eligible = rows.filter((row) => row.data_quality?.eligible !== false);
+
+  const strict = eligible.filter((row) => {
     const make = (row.make || "").trim();
     if (inputs.brandPreference !== "any" && make !== inputs.brandPreference) {
       return false;
     }
 
-    const powertrain = normalizePowertrainCategory(row.fuel_type);
-    if (inputs.powertrainPreference !== "any" && powertrain !== inputs.powertrainPreference) {
-      return false;
-    }
-
-    if (row.avg_nz_price != null && row.avg_nz_price > inputs.budget * 1.35) {
+    const powertrain = normalizePowertrainCategory(row.powertrain_category ?? row.fuel_type);
+    if (normalizedPowertrainPreference !== "any" && powertrain !== normalizedPowertrainPreference) {
       return false;
     }
     return true;
   });
 
-  return filtered
-    .map((row) => staticToRecommendation(row, inputs))
-    .sort((a, b) => b.match_score - a.match_score)
+  const pool = strict.length > 0 ? strict : eligible.filter((row) => {
+    const powertrain = normalizePowertrainCategory(row.powertrain_category ?? row.fuel_type);
+    return normalizedPowertrainPreference === "any" || powertrain === normalizedPowertrainPreference;
+  });
+
+  const mode: "strict" | "fallback" = strict.length > 0 ? "strict" : "fallback";
+
+  return pool
+    .map((row) => staticToRecommendation(row, inputs, mode))
+    .sort((a, b) => b.match_score - a.match_score || (a.make || "").localeCompare(b.make || ""))
     .slice(0, 10);
 }
 
 export async function getBrands(signal?: AbortSignal): Promise<string[]> {
-  try {
-    const response = await request<{ brands: string[] }>("/brands", {}, signal);
-    return response.brands;
-  } catch {
-    return getBrandsFallback(signal);
-  }
+  return getBrandsFallback(signal);
 }
 
 export async function getRecommendations(
   inputs: RecommendationInputs,
   signal?: AbortSignal
 ): Promise<Recommendation[]> {
-  try {
-    const response = await request<{ results: Recommendation[] }>(
-      "/recommendations",
-      {
-        purpose: inputs.purpose,
-        budget: String(inputs.budget),
-        is_first_car: String(inputs.isFirstCar),
-        powertrain_preference: inputs.powertrainPreference,
-        brand_preference: inputs.brandPreference,
-        top_n: "10",
-      },
-      signal
-    );
-    return response.results;
-  } catch {
-    return getRecommendationsFallback(inputs, signal);
-  }
+  return getRecommendationsFallback(inputs, signal);
 }

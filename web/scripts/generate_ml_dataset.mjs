@@ -7,13 +7,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..", "..");
 
-const DEFAULT_INPUT = path.join(repoRoot, "data", "cars_db.json");
+const DEFAULT_INPUT = path.join(repoRoot, "data", "cars_normalized.json");
 const DEFAULT_FALLBACK_INPUT = path.join(
   repoRoot,
   "web",
   "public",
   "data",
-  "cars_db.json"
+  "cars_normalized.json"
 );
 const DEFAULT_OUTPUT = path.join(repoRoot, "data", "recommendation_training.jsonl");
 const DEFAULT_META = path.join(repoRoot, "data", "recommendation_training.meta.json");
@@ -267,7 +267,7 @@ async function main() {
     cars = await loadCars(DEFAULT_FALLBACK_INPUT);
   }
   if (!cars?.length) {
-    throw new Error("No cars database found. Provide --input or add data/cars_db.json.");
+    throw new Error("No cars database found. Provide --input or add data/cars_normalized.json.");
   }
 
   const makes = [...new Set(cars.map((car) => normalizeText(car?.make)).filter(Boolean))];

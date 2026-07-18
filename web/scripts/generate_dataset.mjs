@@ -11,7 +11,7 @@ const WIKIDATA_SEARCH = "https://www.wikidata.org/w/api.php";
 const USER_AGENT = "car-picker-dataset-generator/0.1";
 
 const DEFAULT_MODEL_MAP = path.join(__dirname, "model_map.json");
-const DEFAULT_SEED = path.join(repoRoot, "web", "public", "data", "cars_db.json");
+const DEFAULT_SEED = path.join(repoRoot, "data", "cars_normalized.json");
 const DEFAULT_OUTPUT = path.join(repoRoot, "data", "cars_db_generated.json");
 const DEFAULT_META = path.join(repoRoot, "data", "cars_db_generated.meta.json");
 const DEFAULT_MIRROR = path.join(

@@ -43,7 +43,7 @@ export default function App() {
       .then(setTop)
       .catch((error: unknown) => {
         if ((error as Error).name !== "AbortError") {
-          setLoadError("Could not load recommendations. Check that the local API is running.");
+          setLoadError("Could not load recommendations from the static catalog.");
         }
       })
       .finally(() => setLoading(false));
