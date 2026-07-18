@@ -45,18 +45,36 @@ def format_recommendations(
 
     purpose = str(user_inputs.get("purpose", "")).lower()
     budget = float(user_inputs.get("budget", 0))
+    fallback_mode = any(car.get("recommendation_mode") == "fallback" for car in top_cars)
 
-    lines = ["## Top Car Recommendations (NZ Market)"]
-    for idx, car in enumerate(top_cars[:3], start=1):
+    lines = [
+        "## Best available car matches" if fallback_mode else "## Top Car Recommendations (NZ Market)"
+    ]
+    if fallback_mode:
+        lines.append(
+            "These options relax one or more filters so you still get a useful shortlist."
+        )
+    for idx, car in enumerate(top_cars[:10], start=1):
         year_bracket = _fit_year_bracket(car, budget)
         issues = car.get("critical_issues", [])
         issues_text = "\n".join(f"- {issue}" for issue in issues) or "- None listed"
+        score_breakdown = car.get("score_breakdown", [])
+        rewards = [
+            item["reason"]
+            for item in score_breakdown
+            if item.get("score", 0) > 0
+        ][:3]
+        penalties = car.get("penalty_reasons", [])[:2]
+        rewards_text = ", ".join(rewards) if rewards else "No scored advantages recorded"
+        penalties_text = ", ".join(penalties) if penalties else "None"
 
         lines.extend(
             [
                 f"\n### {idx}. {car['make']} {car['model']} ({car['generation']})",
                 f"- **Year bracket in budget**: {year_bracket}",
                 f"- **Purpose fit**: {_purpose_fit_text(car, purpose)}",
+                f"- **Top ranking factors**: {rewards_text}",
+                f"- **Penalties**: {penalties_text}",
                 "- **Warnings (common issues)**:",
                 issues_text,
                 (

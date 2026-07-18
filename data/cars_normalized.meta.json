@@ -1,0 +1,828 @@
+{
+  "record_count": 16491,
+  "missing_value_counts": {
+    "year": 0,
+    "engine_displacement_cc": 290,
+    "engine_displacement_l": 290,
+    "engine_power_kw": 588,
+    "torque_nm": 16491,
+    "doors": 1503,
+    "seats": 6,
+    "safety_stars": 4,
+    "safety_rating": 4,
+    "fuel_consumption_l_100km": 229
+  },
+  "powertrain_category_counts": {
+    "ev": 290,
+    "plug_in_hybrid": 222,
+    "non_ev": 15932,
+    "unknown": 47
+  },
+  "eligible_record_count": 15681,
+  "ineligible_reasons": {
+    "fuel_consumption_l_100km": 229,
+    "engine_power_kw": 588,
+    "transmission": 10,
+    "seats": 6,
+    "safety_rating": 4
+  },
+  "workbook_count": 18,
+  "per_workbook": {
+    "audi": {
+      "record_count": 940,
+      "missing_value_counts": {
+        "year": 0,
+        "engine_displacement_cc": 48,
+        "engine_displacement_l": 48,
+        "engine_power_kw": 0,
+        "torque_nm": 940,
+        "doors": 0,
+        "seats": 0,
+        "safety_stars": 0,
+        "safety_rating": 0,
+        "fuel_consumption_l_100km": 48
+      },
+      "powertrain_category_counts": {
+        "ev": 48,
+        "plug_in_hybrid": 17,
+        "non_ev": 875
+      },
+      "eligible_record_count": 892,
+      "ineligible_reasons": {
+        "fuel_consumption_l_100km": 48
+      },
+      "source_path": "data\\audi.xlsx",
+      "source_column_validation": {
+        "missing_required_columns": [],
+        "unknown_columns": [
+          "ccs notes",
+          "chassis",
+          "co2 3p-wltp worst case",
+          "co2 difference (2026)",
+          "fleet average charge (2026)",
+          "gvm",
+          "imported from",
+          "model code",
+          "normalised tare",
+          "original test cycle",
+          "pay as you go charge (2026)",
+          "variant",
+          "vin"
+        ]
+      }
+    },
+    "bmw": {
+      "record_count": 1161,
+      "missing_value_counts": {
+        "year": 0,
+        "engine_displacement_cc": 38,
+        "engine_displacement_l": 38,
+        "engine_power_kw": 5,
+        "torque_nm": 1161,
+        "doors": 5,
+        "seats": 1,
+        "safety_stars": 2,
+        "safety_rating": 2,
+        "fuel_consumption_l_100km": 1
+      },
+      "powertrain_category_counts": {
+        "ev": 38,
+        "non_ev": 1081,
+        "plug_in_hybrid": 42
+      },
+      "eligible_record_count": 1154,
+      "ineligible_reasons": {
+        "engine_power_kw": 5,
+        "transmission": 1,
+        "seats": 1,
+        "fuel_consumption_l_100km": 1,
+        "safety_rating": 2
+      },
+      "source_path": "data\\bmw.xlsx",
+      "source_column_validation": {
+        "missing_required_columns": [],
+        "unknown_columns": [
+          "ccs notes",
+          "chassis",
+          "co2 3p-wltp worst case",
+          "co2 difference (2026)",
+          "fleet average charge (2026)",
+          "gvm",
+          "imported from",
+          "model code",
+          "normalised tare",
+          "original test cycle",
+          "pay as you go charge (2026)",
+          "variant",
+          "vin"
+        ]
+      }
+    },
+    "ford": {
+      "record_count": 1414,
+      "missing_value_counts": {
+        "year": 0,
+        "engine_displacement_cc": 17,
+        "engine_displacement_l": 17,
+        "engine_power_kw": 0,
+        "torque_nm": 1414,
+        "doors": 24,
+        "seats": 0,
+        "safety_stars": 0,
+        "safety_rating": 0,
+        "fuel_consumption_l_100km": 13
+      },
+      "powertrain_category_counts": {
+        "ev": 17,
+        "non_ev": 1340,
+        "plug_in_hybrid": 12,
+        "unknown": 45
+      },
+      "eligible_record_count": 1401,
+      "ineligible_reasons": {
+        "fuel_consumption_l_100km": 13
+      },
+      "source_path": "data\\ford.xlsx",
+      "source_column_validation": {
+        "missing_required_columns": [],
+        "unknown_columns": [
+          "ccs notes",
+          "chassis",
+          "co2 3p-wltp worst case",
+          "co2 difference (2026)",
+          "fleet average charge (2026)",
+          "gvm",
+          "imported from",
+          "model code",
+          "normalised tare",
+          "original test cycle",
+          "pay as you go charge (2026)",
+          "variant",
+          "vin"
+        ]
+      }
+    },
+    "honda": {
+      "record_count": 712,
+      "missing_value_counts": {
+        "year": 0,
+        "engine_displacement_cc": 2,
+        "engine_displacement_l": 2,
+        "engine_power_kw": 142,
+        "torque_nm": 712,
+        "doors": 168,
+        "seats": 1,
+        "safety_stars": 0,
+        "safety_rating": 0,
+        "fuel_consumption_l_100km": 2
+      },
+      "powertrain_category_counts": {
+        "non_ev": 710,
+        "ev": 2
+      },
+      "eligible_record_count": 569,
+      "ineligible_reasons": {
+        "fuel_consumption_l_100km": 2,
+        "engine_power_kw": 142,
+        "transmission": 1,
+        "seats": 1
+      },
+      "source_path": "data\\honda.xlsx",
+      "source_column_validation": {
+        "missing_required_columns": [],
+        "unknown_columns": [
+          "ccs notes",
+          "chassis",
+          "co2 3p-wltp worst case",
+          "co2 difference (2026)",
+          "fleet average charge (2026)",
+          "gvm",
+          "imported from",
+          "model code",
+          "normalised tare",
+          "original test cycle",
+          "pay as you go charge (2026)",
+          "variant",
+          "vin"
+        ]
+      }
+    },
+    "hyundai": {
+      "record_count": 633,
+      "missing_value_counts": {
+        "year": 0,
+        "engine_displacement_cc": 31,
+        "engine_displacement_l": 31,
+        "engine_power_kw": 0,
+        "torque_nm": 633,
+        "doors": 4,
+        "seats": 0,
+        "safety_stars": 0,
+        "safety_rating": 0,
+        "fuel_consumption_l_100km": 22
+      },
+      "powertrain_category_counts": {
+        "non_ev": 596,
+        "ev": 31,
+        "plug_in_hybrid": 5,
+        "unknown": 1
+      },
+      "eligible_record_count": 611,
+      "ineligible_reasons": {
+        "fuel_consumption_l_100km": 22
+      },
+      "source_path": "data\\hyundai.xlsx",
+      "source_column_validation": {
+        "missing_required_columns": [],
+        "unknown_columns": [
+          "ccs notes",
+          "chassis",
+          "co2 3p-wltp worst case",
+          "co2 difference (2026)",
+          "fleet average charge (2026)",
+          "gvm",
+          "imported from",
+          "model code",
+          "normalised tare",
+          "original test cycle",
+          "pay as you go charge (2026)",
+          "variant",
+          "vin"
+        ]
+      }
+    },
+    "jeep": {
+      "record_count": 305,
+      "missing_value_counts": {
+        "year": 0,
+        "engine_displacement_cc": 1,
+        "engine_displacement_l": 1,
+        "engine_power_kw": 0,
+        "torque_nm": 305,
+        "doors": 0,
+        "seats": 0,
+        "safety_stars": 0,
+        "safety_rating": 0,
+        "fuel_consumption_l_100km": 1
+      },
+      "powertrain_category_counts": {
+        "non_ev": 301,
+        "ev": 1,
+        "plug_in_hybrid": 3
+      },
+      "eligible_record_count": 304,
+      "ineligible_reasons": {
+        "fuel_consumption_l_100km": 1
+      },
+      "source_path": "data\\jeep.xlsx",
+      "source_column_validation": {
+        "missing_required_columns": [],
+        "unknown_columns": [
+          "ccs notes",
+          "chassis",
+          "co2 3p-wltp worst case",
+          "co2 difference (2026)",
+          "fleet average charge (2026)",
+          "gvm",
+          "imported from",
+          "model code",
+          "normalised tare",
+          "original test cycle",
+          "pay as you go charge (2026)",
+          "variant",
+          "vin"
+        ]
+      }
+    },
+    "kia": {
+      "record_count": 491,
+      "missing_value_counts": {
+        "year": 0,
+        "engine_displacement_cc": 34,
+        "engine_displacement_l": 34,
+        "engine_power_kw": 0,
+        "torque_nm": 491,
+        "doors": 3,
+        "seats": 0,
+        "safety_stars": 1,
+        "safety_rating": 1,
+        "fuel_consumption_l_100km": 27
+      },
+      "powertrain_category_counts": {
+        "ev": 34,
+        "non_ev": 438,
+        "plug_in_hybrid": 19
+      },
+      "eligible_record_count": 464,
+      "ineligible_reasons": {
+        "fuel_consumption_l_100km": 27,
+        "safety_rating": 1
+      },
+      "source_path": "data\\kia.xlsx",
+      "source_column_validation": {
+        "missing_required_columns": [],
+        "unknown_columns": [
+          "ccs notes",
+          "chassis",
+          "co2 3p-wltp worst case",
+          "co2 difference (2026)",
+          "fleet average charge (2026)",
+          "gvm",
+          "imported from",
+          "model code",
+          "normalised tare",
+          "original test cycle",
+          "pay as you go charge (2026)",
+          "variant",
+          "vin"
+        ]
+      }
+    },
+    "lexus": {
+      "record_count": 392,
+      "missing_value_counts": {
+        "year": 0,
+        "engine_displacement_cc": 9,
+        "engine_displacement_l": 9,
+        "engine_power_kw": 13,
+        "torque_nm": 392,
+        "doors": 17,
+        "seats": 0,
+        "safety_stars": 0,
+        "safety_rating": 0,
+        "fuel_consumption_l_100km": 6
+      },
+      "powertrain_category_counts": {
+        "ev": 9,
+        "non_ev": 378,
+        "plug_in_hybrid": 5
+      },
+      "eligible_record_count": 373,
+      "ineligible_reasons": {
+        "fuel_consumption_l_100km": 6,
+        "engine_power_kw": 13
+      },
+      "source_path": "data\\lexus.xlsx",
+      "source_column_validation": {
+        "missing_required_columns": [],
+        "unknown_columns": [
+          "ccs notes",
+          "chassis",
+          "co2 3p-wltp worst case",
+          "co2 difference (2026)",
+          "fleet average charge (2026)",
+          "gvm",
+          "imported from",
+          "model code",
+          "normalised tare",
+          "original test cycle",
+          "pay as you go charge (2026)",
+          "variant",
+          "vin"
+        ]
+      }
+    },
+    "mazda": {
+      "record_count": 1112,
+      "missing_value_counts": {
+        "year": 0,
+        "engine_displacement_cc": 2,
+        "engine_displacement_l": 2,
+        "engine_power_kw": 103,
+        "torque_nm": 1112,
+        "doors": 157,
+        "seats": 0,
+        "safety_stars": 0,
+        "safety_rating": 0,
+        "fuel_consumption_l_100km": 3
+      },
+      "powertrain_category_counts": {
+        "non_ev": 1104,
+        "plug_in_hybrid": 6,
+        "ev": 2
+      },
+      "eligible_record_count": 1006,
+      "ineligible_reasons": {
+        "engine_power_kw": 103,
+        "fuel_consumption_l_100km": 3
+      },
+      "source_path": "data\\mazda.xlsx",
+      "source_column_validation": {
+        "missing_required_columns": [],
+        "unknown_columns": [
+          "ccs notes",
+          "chassis",
+          "co2 3p-wltp worst case",
+          "co2 difference (2026)",
+          "fleet average charge (2026)",
+          "gvm",
+          "imported from",
+          "model code",
+          "normalised tare",
+          "original test cycle",
+          "pay as you go charge (2026)",
+          "variant",
+          "vin"
+        ]
+      }
+    },
+    "mercedes": {
+      "record_count": 1719,
+      "missing_value_counts": {
+        "year": 0,
+        "engine_displacement_cc": 39,
+        "engine_displacement_l": 39,
+        "engine_power_kw": 11,
+        "torque_nm": 1719,
+        "doors": 26,
+        "seats": 0,
+        "safety_stars": 0,
+        "safety_rating": 0,
+        "fuel_consumption_l_100km": 31
+      },
+      "powertrain_category_counts": {
+        "ev": 39,
+        "non_ev": 1658,
+        "plug_in_hybrid": 22
+      },
+      "eligible_record_count": 1679,
+      "ineligible_reasons": {
+        "fuel_consumption_l_100km": 31,
+        "engine_power_kw": 11,
+        "transmission": 2
+      },
+      "source_path": "data\\mercedes.xlsx",
+      "source_column_validation": {
+        "missing_required_columns": [],
+        "unknown_columns": [
+          "ccs notes",
+          "chassis",
+          "co2 3p-wltp worst case",
+          "co2 difference (2026)",
+          "fleet average charge (2026)",
+          "gvm",
+          "imported from",
+          "model code",
+          "normalised tare",
+          "original test cycle",
+          "pay as you go charge (2026)",
+          "variant",
+          "vin"
+        ]
+      }
+    },
+    "mini": {
+      "record_count": 288,
+      "missing_value_counts": {
+        "year": 0,
+        "engine_displacement_cc": 12,
+        "engine_displacement_l": 12,
+        "engine_power_kw": 0,
+        "torque_nm": 288,
+        "doors": 0,
+        "seats": 0,
+        "safety_stars": 0,
+        "safety_rating": 0,
+        "fuel_consumption_l_100km": 3
+      },
+      "powertrain_category_counts": {
+        "ev": 12,
+        "non_ev": 271,
+        "plug_in_hybrid": 5
+      },
+      "eligible_record_count": 285,
+      "ineligible_reasons": {
+        "fuel_consumption_l_100km": 3
+      },
+      "source_path": "data\\mini.xlsx",
+      "source_column_validation": {
+        "missing_required_columns": [],
+        "unknown_columns": [
+          "ccs notes",
+          "chassis",
+          "co2 3p-wltp worst case",
+          "co2 difference (2026)",
+          "fleet average charge (2026)",
+          "gvm",
+          "imported from",
+          "model code",
+          "normalised tare",
+          "original test cycle",
+          "pay as you go charge (2026)",
+          "variant",
+          "vin"
+        ]
+      }
+    },
+    "mitsubishi": {
+      "record_count": 1116,
+      "missing_value_counts": {
+        "year": 0,
+        "engine_displacement_cc": 7,
+        "engine_displacement_l": 7,
+        "engine_power_kw": 20,
+        "torque_nm": 1116,
+        "doors": 103,
+        "seats": 2,
+        "safety_stars": 1,
+        "safety_rating": 1,
+        "fuel_consumption_l_100km": 11
+      },
+      "powertrain_category_counts": {
+        "plug_in_hybrid": 40,
+        "non_ev": 1069,
+        "ev": 7
+      },
+      "eligible_record_count": 1087,
+      "ineligible_reasons": {
+        "engine_power_kw": 20,
+        "fuel_consumption_l_100km": 11,
+        "transmission": 2,
+        "seats": 2,
+        "safety_rating": 1
+      },
+      "source_path": "data\\mitsubishi.xlsx",
+      "source_column_validation": {
+        "missing_required_columns": [],
+        "unknown_columns": [
+          "ccs notes",
+          "chassis",
+          "co2 3p-wltp worst case",
+          "co2 difference (2026)",
+          "fleet average charge (2026)",
+          "gvm",
+          "imported from",
+          "model code",
+          "normalised tare",
+          "original test cycle",
+          "pay as you go charge (2026)",
+          "variant",
+          "vin"
+        ]
+      }
+    },
+    "nissan": {
+      "record_count": 1004,
+      "missing_value_counts": {
+        "year": 0,
+        "engine_displacement_cc": 13,
+        "engine_displacement_l": 13,
+        "engine_power_kw": 179,
+        "torque_nm": 1004,
+        "doors": 391,
+        "seats": 2,
+        "safety_stars": 0,
+        "safety_rating": 0,
+        "fuel_consumption_l_100km": 15
+      },
+      "powertrain_category_counts": {
+        "non_ev": 991,
+        "ev": 13
+      },
+      "eligible_record_count": 812,
+      "ineligible_reasons": {
+        "engine_power_kw": 179,
+        "fuel_consumption_l_100km": 15,
+        "transmission": 4,
+        "seats": 2
+      },
+      "source_path": "data\\nissan.xlsx",
+      "source_column_validation": {
+        "missing_required_columns": [],
+        "unknown_columns": [
+          "ccs notes",
+          "chassis",
+          "co2 3p-wltp worst case",
+          "co2 difference (2026)",
+          "fleet average charge (2026)",
+          "gvm",
+          "imported from",
+          "model code",
+          "normalised tare",
+          "original test cycle",
+          "pay as you go charge (2026)",
+          "variant",
+          "vin"
+        ]
+      }
+    },
+    "skoda": {
+      "record_count": 422,
+      "missing_value_counts": {
+        "year": 0,
+        "engine_displacement_cc": 16,
+        "engine_displacement_l": 16,
+        "engine_power_kw": 0,
+        "torque_nm": 422,
+        "doors": 0,
+        "seats": 0,
+        "safety_stars": 0,
+        "safety_rating": 0,
+        "fuel_consumption_l_100km": 16
+      },
+      "powertrain_category_counts": {
+        "ev": 16,
+        "non_ev": 382,
+        "plug_in_hybrid": 24
+      },
+      "eligible_record_count": 406,
+      "ineligible_reasons": {
+        "fuel_consumption_l_100km": 16
+      },
+      "source_path": "data\\skoda.xlsx",
+      "source_column_validation": {
+        "missing_required_columns": [],
+        "unknown_columns": [
+          "ccs notes",
+          "chassis",
+          "co2 3p-wltp worst case",
+          "co2 difference (2026)",
+          "fleet average charge (2026)",
+          "gvm",
+          "imported from",
+          "model code",
+          "normalised tare",
+          "original test cycle",
+          "pay as you go charge (2026)",
+          "variant",
+          "vin"
+        ]
+      }
+    },
+    "subaru": {
+      "record_count": 933,
+      "missing_value_counts": {
+        "year": 0,
+        "engine_displacement_cc": 1,
+        "engine_displacement_l": 1,
+        "engine_power_kw": 11,
+        "torque_nm": 933,
+        "doors": 11,
+        "seats": 0,
+        "safety_stars": 0,
+        "safety_rating": 0,
+        "fuel_consumption_l_100km": 1
+      },
+      "powertrain_category_counts": {
+        "non_ev": 932,
+        "ev": 1
+      },
+      "eligible_record_count": 921,
+      "ineligible_reasons": {
+        "engine_power_kw": 11,
+        "fuel_consumption_l_100km": 1
+      },
+      "source_path": "data\\subaru.xlsx",
+      "source_column_validation": {
+        "missing_required_columns": [],
+        "unknown_columns": [
+          "ccs notes",
+          "chassis",
+          "co2 3p-wltp worst case",
+          "co2 difference (2026)",
+          "fleet average charge (2026)",
+          "gvm",
+          "imported from",
+          "model code",
+          "normalised tare",
+          "original test cycle",
+          "pay as you go charge (2026)",
+          "variant",
+          "vin"
+        ]
+      }
+    },
+    "suzuki": {
+      "record_count": 491,
+      "missing_value_counts": {
+        "year": 0,
+        "engine_displacement_cc": 2,
+        "engine_displacement_l": 2,
+        "engine_power_kw": 35,
+        "torque_nm": 491,
+        "doors": 35,
+        "seats": 0,
+        "safety_stars": 0,
+        "safety_rating": 0,
+        "fuel_consumption_l_100km": 6
+      },
+      "powertrain_category_counts": {
+        "ev": 2,
+        "non_ev": 489
+      },
+      "eligible_record_count": 450,
+      "ineligible_reasons": {
+        "fuel_consumption_l_100km": 6,
+        "engine_power_kw": 35
+      },
+      "source_path": "data\\suzuki.xlsx",
+      "source_column_validation": {
+        "missing_required_columns": [],
+        "unknown_columns": [
+          "ccs notes",
+          "chassis",
+          "co2 3p-wltp worst case",
+          "co2 difference (2026)",
+          "fleet average charge (2026)",
+          "gvm",
+          "imported from",
+          "model code",
+          "normalised tare",
+          "original test cycle",
+          "pay as you go charge (2026)",
+          "variant",
+          "vin"
+        ]
+      }
+    },
+    "toyota": {
+      "record_count": 2203,
+      "missing_value_counts": {
+        "year": 0,
+        "engine_displacement_cc": 4,
+        "engine_displacement_l": 4,
+        "engine_power_kw": 68,
+        "torque_nm": 2203,
+        "doors": 535,
+        "seats": 0,
+        "safety_stars": 0,
+        "safety_rating": 0,
+        "fuel_consumption_l_100km": 6
+      },
+      "powertrain_category_counts": {
+        "plug_in_hybrid": 11,
+        "non_ev": 2187,
+        "ev": 4,
+        "unknown": 1
+      },
+      "eligible_record_count": 2129,
+      "ineligible_reasons": {
+        "fuel_consumption_l_100km": 6,
+        "engine_power_kw": 68
+      },
+      "source_path": "data\\toyota.xlsx",
+      "source_column_validation": {
+        "missing_required_columns": [],
+        "unknown_columns": [
+          "ccs notes",
+          "chassis",
+          "co2 3p-wltp worst case",
+          "co2 difference (2026)",
+          "fleet average charge (2026)",
+          "gvm",
+          "imported from",
+          "model code",
+          "normalised tare",
+          "original test cycle",
+          "pay as you go charge (2026)",
+          "variant",
+          "vin"
+        ]
+      }
+    },
+    "vw": {
+      "record_count": 1155,
+      "missing_value_counts": {
+        "year": 0,
+        "engine_displacement_cc": 14,
+        "engine_displacement_l": 14,
+        "engine_power_kw": 1,
+        "torque_nm": 1155,
+        "doors": 24,
+        "seats": 0,
+        "safety_stars": 0,
+        "safety_rating": 0,
+        "fuel_consumption_l_100km": 17
+      },
+      "powertrain_category_counts": {
+        "ev": 14,
+        "non_ev": 1130,
+        "plug_in_hybrid": 11
+      },
+      "eligible_record_count": 1138,
+      "ineligible_reasons": {
+        "fuel_consumption_l_100km": 17,
+        "engine_power_kw": 1
+      },
+      "source_path": "data\\vw.xlsx",
+      "source_column_validation": {
+        "missing_required_columns": [],
+        "unknown_columns": [
+          "ccs notes",
+          "chassis",
+          "co2 3p-wltp worst case",
+          "co2 difference (2026)",
+          "fleet average charge (2026)",
+          "gvm",
+          "imported from",
+          "model code",
+          "normalised tare",
+          "original test cycle",
+          "pay as you go charge (2026)",
+          "variant",
+          "vin"
+        ]
+      }
+    }
+  }
+}

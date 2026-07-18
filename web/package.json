@@ -1,0 +1,26 @@
+{
+  "name": "car-picker-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy": "gh-pages -d dist --message \"deploy\"",
+    "generate:data": "node scripts/generate_dataset.mjs --mirror",
+    "generate:ml": "node scripts/generate_ml_dataset.mjs --users 200",
+    "expand:models": "node scripts/expand_model_map.mjs --limit 200 --min-year 2000"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "typescript": "^5.0.0",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "gh-pages": "^5.0.0"
+  }
+}
