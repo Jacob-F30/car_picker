@@ -29,7 +29,7 @@ export default function App() {
       .then(setBrands)
       .catch((error: unknown) => {
         if ((error as Error).name !== "AbortError") {
-          setLoadError("Could not load available brands from the recommendation service.");
+          setLoadError("Could not load available brands from the static catalog.");
         }
       });
     return () => controller.abort();

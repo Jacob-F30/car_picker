@@ -78,9 +78,9 @@ function normalizePowertrainPreference(value: string): string {
     : "any";
 }
 
-function loadCatalog(signal?: AbortSignal): Promise<CatalogCar[]> {
+function loadCatalog(): Promise<CatalogCar[]> {
   if (!catalogPromise) {
-    catalogPromise = fetch(new URL(catalogDatasetPath, window.location.origin), { signal })
+    catalogPromise = fetch(new URL(catalogDatasetPath, window.location.origin))
       .then((response) => {
         if (!response.ok) {
           throw new Error(`Catalog returned ${response.status}.`);
@@ -88,8 +88,14 @@ function loadCatalog(signal?: AbortSignal): Promise<CatalogCar[]> {
         return response.json() as Promise<unknown>;
       })
       .then((rows) => {
-        if (!Array.isArray(rows)) return [];
+        if (!Array.isArray(rows)) {
+          throw new Error("Catalog payload is not a JSON array.");
+        }
         return rows as CatalogCar[];
+      })
+      .catch((error) => {
+        catalogPromise = null;
+        throw error;
       });
   }
   return catalogPromise;
@@ -266,7 +272,7 @@ function staticToRecommendation(car: CatalogCar, inputs: RecommendationInputs, m
 }
 
 async function getBrandsFallback(signal?: AbortSignal): Promise<string[]> {
-  const rows = await loadCatalog(signal);
+  const rows = await loadCatalog();
   return [...new Set(rows.map((row) => (row.make || "").trim()).filter(Boolean))].sort((a, b) =>
     a.localeCompare(b)
   );
@@ -277,7 +283,7 @@ async function getRecommendationsFallback(
   signal?: AbortSignal
 ): Promise<Recommendation[]> {
   const normalizedPowertrainPreference = normalizePowertrainPreference(inputs.powertrainPreference);
-  const rows = await loadCatalog(signal);
+  const rows = await loadCatalog();
   const eligible = rows.filter((row) => row.data_quality?.eligible !== false);
 
   const strict = eligible.filter((row) => {
