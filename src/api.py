@@ -92,6 +92,7 @@ class RecommendationService:
             "purpose": query.get("purpose", "commute"),
             "budget": query.get("budget", 0),
             "is_first_car": _truthy(query.get("is_first_car", query.get("isFirstCar"))),
+            "fuel_type": query.get("fuel_type", query.get("fuelType", "any")),
             "powertrain_preference": query.get(
                 "powertrain_preference", query.get("powertrainPreference", "any")
             ),

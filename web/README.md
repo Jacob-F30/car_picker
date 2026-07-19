@@ -2,6 +2,10 @@
 
 This Vite + React + TypeScript frontend runs fully static scoring in the browser using the canonical normalized dataset.
 
+Architecture status:
+- This frontend static scorer is the current production path.
+- The Python backend engine exists for future service integration and scoring parity.
+
 Quick start:
 
 ```bash

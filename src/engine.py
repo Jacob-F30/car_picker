@@ -89,115 +89,193 @@ def derive_purpose_strengths(car: Mapping[str, Any]) -> Dict[str, Dict[str, Any]
 
     commute_factors: List[Dict[str, Any]] = []
     commute = 0.0
-    if _contains_any(fuel_type, ["hybrid", "electric", "ev"]):
-        commute += _add_factor(commute_factors, "powertrain", 20, "efficient electrified powertrain")
+    powertrain = _powertrain_category(car)
+    if powertrain == "ev":
+        commute += _add_factor(commute_factors, "powertrain", 16, "electric powertrain reduces commute running cost")
+    elif powertrain == "plug_in_hybrid":
+        commute += _add_factor(commute_factors, "powertrain", 10, "plug-in hybrid supports efficient city commuting")
+    elif _contains_any(fuel_type, ["hybrid"]):
+        commute += _add_factor(commute_factors, "powertrain", 6, "hybrid powertrain supports efficient commuting")
     if consumption is not None:
-        if consumption <= 5.5:
-            commute += _add_factor(commute_factors, "fuel_consumption", 18, "very low fuel use")
-        elif consumption <= 7.0:
-            commute += _add_factor(commute_factors, "fuel_consumption", 10, "reasonable fuel use")
+        if consumption <= 4.5:
+            commute += _add_factor(commute_factors, "fuel_consumption", 28, "excellent commute efficiency")
+        elif consumption <= 5.5:
+            commute += _add_factor(commute_factors, "fuel_consumption", 22, "very low fuel use")
+        elif consumption <= 6.5:
+            commute += _add_factor(commute_factors, "fuel_consumption", 14, "efficient fuel use")
+        elif consumption <= 7.5:
+            commute += _add_factor(commute_factors, "fuel_consumption", 4, "acceptable commute fuel use")
+        elif consumption >= 10.0:
+            commute += _add_factor(commute_factors, "fuel_consumption", -32, "very high fuel use for commuting")
         elif consumption >= 9.0:
-            commute += _add_factor(commute_factors, "fuel_consumption", -12, "high fuel use for commuting")
-    if engine_size is not None and engine_size <= 2.0:
-        commute += _add_factor(commute_factors, "engine_size", 12, "practical engine displacement")
-    if engine_power_kw is not None and engine_power_kw <= 150:
-        commute += _add_factor(commute_factors, "engine_power", 6, "practical engine power")
+            commute += _add_factor(commute_factors, "fuel_consumption", -22, "high fuel use for commuting")
+        elif consumption >= 8.3:
+            commute += _add_factor(commute_factors, "fuel_consumption", -12, "elevated commute fuel cost")
+    else:
+        commute += _add_factor(commute_factors, "fuel_consumption", -8, "missing fuel-use data increases commute uncertainty")
+    if engine_size is not None:
+        if engine_size <= 1.6:
+            commute += _add_factor(commute_factors, "engine_size", 10, "small displacement suits commuting")
+        elif engine_size <= 2.0:
+            commute += _add_factor(commute_factors, "engine_size", 6, "practical engine displacement")
+        elif engine_size >= 3.0:
+            commute += _add_factor(commute_factors, "engine_size", -20, "large displacement raises commute cost")
+        elif engine_size >= 2.5:
+            commute += _add_factor(commute_factors, "engine_size", -12, "bigger engine than typical commute needs")
+    if engine_power_kw is not None:
+        if engine_power_kw <= 110:
+            commute += _add_factor(commute_factors, "engine_power", 8, "right-sized power for daily driving")
+        elif engine_power_kw <= 150:
+            commute += _add_factor(commute_factors, "engine_power", 4, "practical engine power")
+        elif engine_power_kw >= 230:
+            commute += _add_factor(commute_factors, "engine_power", -18, "excessive power for commute priorities")
+        elif engine_power_kw >= 180:
+            commute += _add_factor(commute_factors, "engine_power", -10, "higher power than needed for commuting")
     if drivetrain == "FWD":
         commute += _add_factor(commute_factors, "drivetrain", 5, "front-wheel drive suits daily use")
+    elif drivetrain in {"AWD", "4WD"}:
+        commute += _add_factor(commute_factors, "drivetrain", -4, "all-wheel-drive usually adds commute running cost")
 
     family_factors: List[Dict[str, Any]] = []
     family = 0.0
     if seats is not None:
         if seats >= 7:
-            family += _add_factor(family_factors, "seats", 22, "seven or more seats")
+            family += _add_factor(family_factors, "seats", 24, "seven or more seats")
         elif seats >= 5:
             family += _add_factor(family_factors, "seats", 14, "five or more seats")
+        elif seats == 4:
+            family += _add_factor(family_factors, "seats", 2, "minimum practical family seating")
         elif seats < 4:
-            family += _add_factor(family_factors, "seats", -25, "too few seats for family use")
+            family += _add_factor(family_factors, "seats", -35, "too few seats for family use")
     if doors is not None:
         family += _add_factor(
             family_factors,
             "doors",
-            8 if doors >= 4 else -16,
-            "practical door count" if doors >= 4 else "limited rear-seat access",
+            12 if doors >= 5 else (6 if doors >= 4 else -24),
+            "excellent family access" if doors >= 5 else ("practical door count" if doors >= 4 else "limited rear-seat access"),
         )
     if safety is not None:
-        if safety >= 4:
+        if safety >= 5:
+            family += _add_factor(family_factors, "safety", 20, "top-tier safety rating")
+        elif safety >= 4:
             family += _add_factor(family_factors, "safety", 12, "strong safety rating")
+        elif safety >= 3:
+            family += _add_factor(family_factors, "safety", 2, "meets baseline safety threshold")
         elif safety < 3:
-            family += _add_factor(family_factors, "safety", -30, "safety rating below family threshold")
-    if consumption is not None and consumption <= 8.0:
-        family += _add_factor(family_factors, "fuel_consumption", 7, "reasonable family running cost")
-    if body_style in {"suv", "wagon", "minivan", "van"}:
-        family += _add_factor(family_factors, "body_style", 6, "practical family body style")
+            family += _add_factor(family_factors, "safety", -42, "safety rating below family threshold")
+    if consumption is not None:
+        if consumption <= 7.5:
+            family += _add_factor(family_factors, "fuel_consumption", 8, "reasonable family running cost")
+        elif consumption >= 10.0:
+            family += _add_factor(family_factors, "fuel_consumption", -22, "very high family running cost")
+        elif consumption >= 9.0:
+            family += _add_factor(family_factors, "fuel_consumption", -14, "high family running cost")
+    if _contains_any(body_style, ["suv", "wagon", "minivan", "van"]):
+        family += _add_factor(family_factors, "body_style", 10, "practical family body style")
+    elif _contains_any(body_style, ["coupe", "roadster", "convertible"]):
+        family += _add_factor(family_factors, "body_style", -18, "body style is less practical for family tasks")
+    if engine_power_kw is not None and engine_power_kw >= 260:
+        family += _add_factor(family_factors, "engine_power", -10, "very high power is not essential for family use")
 
     sport_factors: List[Dict[str, Any]] = []
     sport = 0.0
     if torque is not None:
-        if torque >= 400:
-            sport += _add_factor(sport_factors, "torque", 28, "strong torque output")
-        elif torque >= 250:
-            sport += _add_factor(sport_factors, "torque", 18, "responsive torque output")
+        if torque >= 450:
+            sport += _add_factor(sport_factors, "torque", 32, "very strong torque output")
+        elif torque >= 320:
+            sport += _add_factor(sport_factors, "torque", 22, "strong torque output")
+        elif torque >= 220:
+            sport += _add_factor(sport_factors, "torque", 12, "responsive torque output")
         elif torque < 160:
-            sport += _add_factor(sport_factors, "torque", -10, "limited torque for sport use")
+            sport += _add_factor(sport_factors, "torque", -18, "limited torque for sport use")
     if engine_size is not None:
         if engine_size >= 3.0:
             sport += _add_factor(sport_factors, "engine_size", 22, "large performance-oriented displacement")
         elif engine_size >= 2.0:
             sport += _add_factor(sport_factors, "engine_size", 12, "capable engine displacement")
+        elif engine_size < 1.6:
+            sport += _add_factor(sport_factors, "engine_size", -10, "small displacement limits sport headroom")
     if engine_power_kw is not None:
-        if engine_power_kw >= 250:
-            sport += _add_factor(sport_factors, "engine_power", 22, "strong engine or motor power")
-        elif engine_power_kw >= 150:
-            sport += _add_factor(sport_factors, "engine_power", 12, "capable engine or motor power")
+        if engine_power_kw >= 280:
+            sport += _add_factor(sport_factors, "engine_power", 28, "very strong engine or motor power")
+        elif engine_power_kw >= 220:
+            sport += _add_factor(sport_factors, "engine_power", 20, "strong engine or motor power")
+        elif engine_power_kw >= 160:
+            sport += _add_factor(sport_factors, "engine_power", 10, "capable engine or motor power")
+        elif engine_power_kw < 120:
+            sport += _add_factor(sport_factors, "engine_power", -15, "limited power for sport use")
     if drivetrain in {"RWD", "AWD", "4WD"}:
-        sport += _add_factor(sport_factors, "drivetrain", 12, "performance-capable drivetrain")
+        sport += _add_factor(sport_factors, "drivetrain", 14, "performance-capable drivetrain")
+    elif drivetrain == "FWD":
+        sport += _add_factor(sport_factors, "drivetrain", -6, "front-wheel drive limits sport balance")
     if any(token in transmission for token in ("manual", "dual", "dct", "dsg")):
         sport += _add_factor(sport_factors, "transmission", 12, "driver-focused transmission")
+    elif "cvt" in transmission:
+        sport += _add_factor(sport_factors, "transmission", -10, "CVT is less engaging for sport driving")
+    if _contains_any(body_style, ["coupe", "sport", "roadster"]):
+        sport += _add_factor(sport_factors, "body_style", 10, "sport-oriented body style")
+    elif _contains_any(body_style, ["minivan", "van"]):
+        sport += _add_factor(sport_factors, "body_style", -20, "body style is not sport focused")
+    if consumption is not None and consumption >= 13.0:
+        sport += _add_factor(sport_factors, "fuel_consumption", -8, "very high fuel use for frequent spirited driving")
 
     leisure_factors: List[Dict[str, Any]] = []
     leisure = 0.0
+    utility_body = _contains_any(body_style, ["suv", "ute", "pickup", "light truck"])
     if _contains_any(body_style, ["suv", "ute", "pickup", "light truck"]):
-        leisure += _add_factor(leisure_factors, "body_style", 18, "utility-focused body style")
+        leisure += _add_factor(leisure_factors, "body_style", 20, "utility-focused body style")
     elif _contains_any(body_style, ["wagon", "van", "minivan"]):
-        leisure += _add_factor(leisure_factors, "body_style", 12, "practical travel body style")
+        leisure += _add_factor(leisure_factors, "body_style", 14, "practical travel body style")
+    elif _contains_any(body_style, ["coupe", "roadster", "convertible"]):
+        leisure += _add_factor(leisure_factors, "body_style", -14, "limited cargo or passenger flexibility")
     if seats is not None:
         if seats >= 7:
             leisure += _add_factor(leisure_factors, "seats", 18, "seven or more seats")
         elif seats >= 5:
             leisure += _add_factor(leisure_factors, "seats", 10, "five or more seats")
         elif seats < 4:
-            leisure += _add_factor(leisure_factors, "seats", -20, "too few seats for leisure travel")
+            leisure += _add_factor(leisure_factors, "seats", -24, "too few seats for leisure travel")
     if doors is not None:
         leisure += _add_factor(
             leisure_factors,
             "doors",
-            6 if doors >= 4 else -12,
+            8 if doors >= 4 else -14,
             "practical door count" if doors >= 4 else "limited passenger access",
         )
     if drivetrain in {"AWD", "4WD"}:
-        leisure += _add_factor(leisure_factors, "drivetrain", 12, "all-wheel-drive capability")
+        leisure += _add_factor(leisure_factors, "drivetrain", 14, "all-wheel-drive capability")
+    elif utility_body and drivetrain == "FWD":
+        leisure += _add_factor(leisure_factors, "drivetrain", -6, "front-wheel drive limits utility traction")
     if engine_size is not None and engine_size >= 2.0:
         leisure += _add_factor(leisure_factors, "engine_size", 7, "capable engine displacement")
     if engine_power_kw is not None:
-        if engine_power_kw >= 200:
-            leisure += _add_factor(leisure_factors, "engine_power", 10, "strong engine or motor power")
+        if engine_power_kw >= 220:
+            leisure += _add_factor(leisure_factors, "engine_power", 12, "strong engine or motor power")
+        elif engine_power_kw >= 170:
+            leisure += _add_factor(leisure_factors, "engine_power", 8, "capable engine or motor power")
         elif engine_power_kw >= 150:
             leisure += _add_factor(leisure_factors, "engine_power", 6, "capable engine or motor power")
-        elif _contains_any(body_style, ["suv", "ute", "pickup", "van"]) and engine_power_kw < 100:
-            leisure += _add_factor(leisure_factors, "engine_power", -8, "limited power for a utility body style")
-    if torque is not None and torque >= 250:
-        leisure += _add_factor(leisure_factors, "torque", 8, "useful torque for loaded travel")
+        elif utility_body and engine_power_kw < 100:
+            leisure += _add_factor(leisure_factors, "engine_power", -12, "limited power for a utility body style")
+    if torque is not None:
+        if torque >= 280:
+            leisure += _add_factor(leisure_factors, "torque", 10, "useful torque for loaded travel")
+        elif utility_body and torque < 170:
+            leisure += _add_factor(leisure_factors, "torque", -8, "limited torque for loaded leisure trips")
     if safety is not None:
-        if safety >= 4:
+        if safety >= 5:
+            leisure += _add_factor(leisure_factors, "safety", 10, "top-tier safety rating")
+        elif safety >= 4:
             leisure += _add_factor(leisure_factors, "safety", 6, "strong safety rating")
         elif safety < 3:
-            leisure += _add_factor(leisure_factors, "safety", -10, "low safety rating for travel use")
-    if _powertrain_category(car) != "ev" and consumption is not None:
-        if consumption <= 8.0:
-            leisure += _add_factor(leisure_factors, "fuel_consumption", 3, "reasonable travel running cost")
+            leisure += _add_factor(leisure_factors, "safety", -16, "low safety rating for travel use")
+    if powertrain != "ev" and consumption is not None:
+        if consumption <= 8.5:
+            leisure += _add_factor(leisure_factors, "fuel_consumption", 6, "reasonable travel running cost")
+        elif consumption >= 11.5:
+            leisure += _add_factor(leisure_factors, "fuel_consumption", -20, "very high fuel use for leisure travel")
         elif consumption >= 10.0:
-            leisure += _add_factor(leisure_factors, "fuel_consumption", -8, "high fuel use for leisure travel")
+            leisure += _add_factor(leisure_factors, "fuel_consumption", -12, "high fuel use for leisure travel")
 
     return {
         "commute": {"score": round(commute, 2), "factors": commute_factors},
@@ -315,11 +393,16 @@ def _score_car(
             "matches selected fuel" if fuel_type in fuel_value else "does not match selected fuel",
         )
     if powertrain_preference != "any":
+        powertrain_match = _powertrain_category(car) == powertrain_preference
         score += _add_factor(
             factors,
             "powertrain_preference",
-            12,
-            f"matches selected {powertrain_preference.replace('_', ' ')} powertrain",
+            14 if powertrain_match else (-16 if relaxed else 0),
+            (
+                f"matches selected {powertrain_preference.replace('_', ' ')} powertrain"
+                if powertrain_match
+                else f"does not match selected {powertrain_preference.replace('_', ' ')} powertrain"
+            ),
         )
 
     if relaxed:

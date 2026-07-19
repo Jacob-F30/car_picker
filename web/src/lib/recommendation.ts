@@ -116,6 +116,19 @@ function scoreFactor(factor: string, score: number, reason: string): ScoreFactor
   return { factor, score, reason };
 }
 
+function applyScore(
+  factors: ScoreFactor[],
+  penalties: string[],
+  factor: string,
+  score: number,
+  reason: string
+): number {
+  if (!score) return 0;
+  factors.push(scoreFactor(factor, score, reason));
+  if (score < 0) penalties.push(reason);
+  return score;
+}
+
 function estimateMatchScore(car: CatalogCar, inputs: RecommendationInputs): {
   score: number;
   factors: ScoreFactor[];
@@ -125,107 +138,221 @@ function estimateMatchScore(car: CatalogCar, inputs: RecommendationInputs): {
   const factors: ScoreFactor[] = [];
   const penalties: string[] = [];
 
-  if (car.fuel_consumption_l_100km != null) {
-    if (car.fuel_consumption_l_100km <= 5.5) {
-      total += 12;
-      factors.push(scoreFactor("efficiency", 12, "Efficient fuel use"));
-    } else if (car.fuel_consumption_l_100km <= 7.0) {
-      total += 5;
-      factors.push(scoreFactor("efficiency", 5, "Reasonable fuel use"));
-    } else {
-      penalties.push("Higher fuel consumption");
-    }
-  }
+  const consumption = car.fuel_consumption_l_100km;
+  const enginePower = car.engine_power_kw;
+  const engineSize = car.engine_displacement_l;
+  const seats = car.seats;
+  const doors = car.doors;
+  const safety = car.safety_rating ?? car.safety_stars;
+  const torque = car.torque_nm;
+  const powertrain = normalizePowertrainCategory(car.powertrain_category ?? car.fuel_type);
 
   if (inputs.isFirstCar) {
     if ((car.year ?? 0) >= 2018) {
-      total += 6;
-      factors.push(scoreFactor("first_car_age", 6, "Modern safety-era model"));
+      total += applyScore(factors, penalties, "first_car_age", 6, "Modern safety-era model");
     }
-    if (car.engine_power_kw != null) {
-      if (car.engine_power_kw <= 130) {
-        total += 5;
-        factors.push(scoreFactor("first_car_power", 5, "Manageable power for new drivers"));
-      } else if (car.engine_power_kw >= 220) {
-        total -= 6;
-        penalties.push("Higher power may be less forgiving for a first car");
+    if (enginePower != null) {
+      if (enginePower <= 130) {
+        total += applyScore(factors, penalties, "first_car_power", 6, "Manageable power for new drivers");
+      } else if (enginePower >= 220) {
+        total += applyScore(factors, penalties, "first_car_power", -10, "Higher power may be less forgiving for a first car");
       }
+    }
+    if (consumption != null && consumption >= 8.5) {
+      total += applyScore(factors, penalties, "first_car_efficiency", -10, "High running cost for a first car");
     }
   }
 
   const bodyStyle = (car.body_style || "").toLowerCase();
   if (inputs.purpose === "family") {
-    if ((car.seats ?? 0) >= 7) {
-      total += 16;
-      factors.push(scoreFactor("family_space", 16, "Strong family seating capacity"));
-    } else if ((car.seats ?? 0) >= 5) {
-      total += 10;
-      factors.push(scoreFactor("family_space", 10, "Suitable seating for family use"));
+    if ((seats ?? 0) >= 7) {
+      total += applyScore(factors, penalties, "family_space", 24, "Strong family seating capacity");
+    } else if ((seats ?? 0) >= 5) {
+      total += applyScore(factors, penalties, "family_space", 14, "Suitable seating for family use");
+    } else if ((seats ?? 0) === 4) {
+      total += applyScore(factors, penalties, "family_space", 2, "Minimum practical family seating");
     } else {
-      total -= 12;
-      penalties.push("Limited seating for family use");
+      total += applyScore(factors, penalties, "family_space", -35, "Limited seating for family use");
     }
-    if ((car.doors ?? 0) >= 5) {
-      total += 7;
-      factors.push(scoreFactor("family_access", 7, "Easy access with 5 doors"));
+    if ((doors ?? 0) >= 5) {
+      total += applyScore(factors, penalties, "family_access", 12, "Excellent access with 5 doors");
+    } else if ((doors ?? 0) >= 4) {
+      total += applyScore(factors, penalties, "family_access", 6, "Practical family access");
+    } else {
+      total += applyScore(factors, penalties, "family_access", -24, "Limited rear-seat access for family use");
     }
-    if ((car.safety_rating ?? 0) >= 5) {
-      total += 10;
-      factors.push(scoreFactor("family_safety", 10, "Top-tier safety rating"));
+    if ((safety ?? 0) >= 5) {
+      total += applyScore(factors, penalties, "family_safety", 20, "Top-tier safety rating");
+    } else if ((safety ?? 0) >= 4) {
+      total += applyScore(factors, penalties, "family_safety", 12, "Strong safety rating");
+    } else if ((safety ?? 0) < 3) {
+      total += applyScore(factors, penalties, "family_safety", -42, "Safety rating below family threshold");
+    }
+    if (consumption != null) {
+      if (consumption <= 7.5) {
+        total += applyScore(factors, penalties, "family_efficiency", 8, "Reasonable family running cost");
+      } else if (consumption >= 10.0) {
+        total += applyScore(factors, penalties, "family_efficiency", -22, "Very high family running cost");
+      } else if (consumption >= 9.0) {
+        total += applyScore(factors, penalties, "family_efficiency", -14, "High family running cost");
+      }
+    }
+    if (bodyStyle.includes("suv") || bodyStyle.includes("wagon") || bodyStyle.includes("van") || bodyStyle.includes("minivan")) {
+      total += applyScore(factors, penalties, "family_body", 10, "Practical family body style");
+    } else if (bodyStyle.includes("coupe") || bodyStyle.includes("roadster") || bodyStyle.includes("convertible")) {
+      total += applyScore(factors, penalties, "family_body", -18, "Body style is less practical for family tasks");
+    }
+    if ((enginePower ?? 0) >= 260) {
+      total += applyScore(factors, penalties, "family_power", -10, "Very high power is not essential for family use");
     }
   } else if (inputs.purpose === "sport") {
-    if ((car.engine_power_kw ?? 0) >= 220) {
-      total += 16;
-      factors.push(scoreFactor("sport_power", 16, "High power output"));
-    } else if ((car.engine_power_kw ?? 0) >= 170) {
-      total += 10;
-      factors.push(scoreFactor("sport_power", 10, "Strong power output"));
+    if ((torque ?? 0) >= 450) {
+      total += applyScore(factors, penalties, "sport_torque", 32, "Very strong torque output");
+    } else if ((torque ?? 0) >= 320) {
+      total += applyScore(factors, penalties, "sport_torque", 22, "Strong torque output");
+    } else if ((torque ?? 0) >= 220) {
+      total += applyScore(factors, penalties, "sport_torque", 12, "Responsive torque output");
+    } else if (torque != null && torque < 160) {
+      total += applyScore(factors, penalties, "sport_torque", -18, "Limited torque for sport use");
     }
-    if (bodyStyle.includes("coupe") || bodyStyle.includes("sport")) {
-      total += 6;
-      factors.push(scoreFactor("sport_body", 6, "Sport-oriented body style"));
+    if ((enginePower ?? 0) >= 280) {
+      total += applyScore(factors, penalties, "sport_power", 28, "Very strong power output");
+    } else if ((enginePower ?? 0) >= 220) {
+      total += applyScore(factors, penalties, "sport_power", 20, "High power output");
+    } else if ((enginePower ?? 0) >= 160) {
+      total += applyScore(factors, penalties, "sport_power", 10, "Strong power output");
+    } else if (enginePower != null && enginePower < 120) {
+      total += applyScore(factors, penalties, "sport_power", -15, "Limited power for sport driving");
+    }
+    if (bodyStyle.includes("coupe") || bodyStyle.includes("sport") || bodyStyle.includes("roadster")) {
+      total += applyScore(factors, penalties, "sport_body", 10, "Sport-oriented body style");
+    } else if (bodyStyle.includes("van") || bodyStyle.includes("minivan")) {
+      total += applyScore(factors, penalties, "sport_body", -20, "Body style is not sport focused");
+    }
+    if ((car.transmission || "").toLowerCase().includes("manual") || (car.transmission || "").toLowerCase().includes("dual")) {
+      total += applyScore(factors, penalties, "sport_transmission", 12, "Driver-focused transmission");
+    } else if ((car.transmission || "").toLowerCase().includes("cvt")) {
+      total += applyScore(factors, penalties, "sport_transmission", -10, "CVT is less engaging for sport driving");
+    }
+    if (consumption != null && consumption >= 13.0) {
+      total += applyScore(factors, penalties, "sport_efficiency", -8, "Very high fuel use for frequent spirited driving");
     }
   } else if (inputs.purpose === "leisure") {
+    const utilityBody = bodyStyle.includes("suv") || bodyStyle.includes("wagon") || bodyStyle.includes("ute") || bodyStyle.includes("pickup") || bodyStyle.includes("van");
     if (
       bodyStyle.includes("suv") ||
-      bodyStyle.includes("wagon") ||
       bodyStyle.includes("ute") ||
       bodyStyle.includes("pickup")
     ) {
-      total += 10;
-      factors.push(scoreFactor("leisure_utility", 10, "Practical body style for leisure trips"));
+      total += applyScore(factors, penalties, "leisure_utility", 20, "Utility-focused body style");
+    } else if (bodyStyle.includes("wagon") || bodyStyle.includes("van") || bodyStyle.includes("minivan")) {
+      total += applyScore(factors, penalties, "leisure_utility", 14, "Practical travel body style");
+    } else if (bodyStyle.includes("coupe") || bodyStyle.includes("roadster") || bodyStyle.includes("convertible")) {
+      total += applyScore(factors, penalties, "leisure_utility", -14, "Limited cargo or passenger flexibility");
     }
-    if ((car.seats ?? 0) >= 5) {
-      total += 6;
-      factors.push(scoreFactor("leisure_space", 6, "Comfortable passenger capacity"));
+    if ((seats ?? 0) >= 7) {
+      total += applyScore(factors, penalties, "leisure_space", 18, "Seven or more seats");
+    } else if ((seats ?? 0) >= 5) {
+      total += applyScore(factors, penalties, "leisure_space", 10, "Comfortable passenger capacity");
+    } else if ((seats ?? 0) < 4) {
+      total += applyScore(factors, penalties, "leisure_space", -24, "Too few seats for leisure travel");
+    }
+    if ((doors ?? 0) >= 4) {
+      total += applyScore(factors, penalties, "leisure_access", 8, "Practical door count");
+    } else {
+      total += applyScore(factors, penalties, "leisure_access", -14, "Limited passenger access");
+    }
+    if ((enginePower ?? 0) >= 220) {
+      total += applyScore(factors, penalties, "leisure_power", 12, "Strong engine or motor power");
+    } else if ((enginePower ?? 0) >= 170) {
+      total += applyScore(factors, penalties, "leisure_power", 8, "Capable engine or motor power");
+    } else if (utilityBody && enginePower != null && enginePower < 100) {
+      total += applyScore(factors, penalties, "leisure_power", -12, "Limited power for a utility body style");
+    }
+    if ((torque ?? 0) >= 280) {
+      total += applyScore(factors, penalties, "leisure_torque", 10, "Useful torque for loaded travel");
+    } else if (utilityBody && torque != null && torque < 170) {
+      total += applyScore(factors, penalties, "leisure_torque", -8, "Limited torque for loaded leisure trips");
+    }
+    if ((safety ?? 0) >= 5) {
+      total += applyScore(factors, penalties, "leisure_safety", 10, "Top-tier safety rating");
+    } else if ((safety ?? 0) >= 4) {
+      total += applyScore(factors, penalties, "leisure_safety", 6, "Strong safety rating");
+    } else if ((safety ?? 0) < 3) {
+      total += applyScore(factors, penalties, "leisure_safety", -16, "Low safety rating for travel use");
+    }
+    if (powertrain !== "ev" && consumption != null) {
+      if (consumption <= 8.5) {
+        total += applyScore(factors, penalties, "leisure_efficiency", 6, "Reasonable travel running cost");
+      } else if (consumption >= 11.5) {
+        total += applyScore(factors, penalties, "leisure_efficiency", -20, "Very high fuel use for leisure travel");
+      } else if (consumption >= 10.0) {
+        total += applyScore(factors, penalties, "leisure_efficiency", -12, "High fuel use for leisure travel");
+      }
     }
   } else {
-    if (car.fuel_consumption_l_100km != null && car.fuel_consumption_l_100km <= 6.5) {
-      total += 10;
-      factors.push(scoreFactor("commute_efficiency", 10, "Efficient for daily commuting"));
+    if (powertrain === "ev") {
+      total += applyScore(factors, penalties, "commute_powertrain", 16, "Electric powertrain reduces commute running cost");
+    } else if (powertrain === "plug_in_hybrid") {
+      total += applyScore(factors, penalties, "commute_powertrain", 10, "Plug-in hybrid supports efficient city commuting");
+    } else if ((car.fuel_type || "").toLowerCase().includes("hybrid")) {
+      total += applyScore(factors, penalties, "commute_powertrain", 6, "Hybrid powertrain supports efficient commuting");
     }
-    if (car.powertrain_category === "ev" || car.powertrain_category === "plug_in_hybrid") {
-      total += 6;
-      factors.push(scoreFactor("commute_powertrain", 6, "Electrified powertrain suits city driving"));
+    if (consumption != null) {
+      if (consumption <= 4.5) {
+        total += applyScore(factors, penalties, "commute_efficiency", 28, "Excellent commute efficiency");
+      } else if (consumption <= 5.5) {
+        total += applyScore(factors, penalties, "commute_efficiency", 22, "Very low fuel use");
+      } else if (consumption <= 6.5) {
+        total += applyScore(factors, penalties, "commute_efficiency", 14, "Efficient fuel use");
+      } else if (consumption <= 7.5) {
+        total += applyScore(factors, penalties, "commute_efficiency", 4, "Acceptable commute fuel use");
+      } else if (consumption >= 10.0) {
+        total += applyScore(factors, penalties, "commute_efficiency", -32, "Very high fuel use for commuting");
+      } else if (consumption >= 9.0) {
+        total += applyScore(factors, penalties, "commute_efficiency", -22, "High fuel use for commuting");
+      } else if (consumption >= 8.3) {
+        total += applyScore(factors, penalties, "commute_efficiency", -12, "Elevated commute fuel cost");
+      }
+    } else {
+      total += applyScore(factors, penalties, "commute_efficiency", -8, "Missing fuel-use data increases commute uncertainty");
+    }
+    if (engineSize != null) {
+      if (engineSize <= 1.6) {
+        total += applyScore(factors, penalties, "commute_engine_size", 10, "Small displacement suits commuting");
+      } else if (engineSize <= 2.0) {
+        total += applyScore(factors, penalties, "commute_engine_size", 6, "Practical engine displacement");
+      } else if (engineSize >= 3.0) {
+        total += applyScore(factors, penalties, "commute_engine_size", -20, "Large displacement raises commute cost");
+      } else if (engineSize >= 2.5) {
+        total += applyScore(factors, penalties, "commute_engine_size", -12, "Bigger engine than typical commute needs");
+      }
+    }
+    if (enginePower != null) {
+      if (enginePower <= 110) {
+        total += applyScore(factors, penalties, "commute_engine_power", 8, "Right-sized power for daily driving");
+      } else if (enginePower <= 150) {
+        total += applyScore(factors, penalties, "commute_engine_power", 4, "Practical engine power");
+      } else if (enginePower >= 230) {
+        total += applyScore(factors, penalties, "commute_engine_power", -18, "Excessive power for commute priorities");
+      } else if (enginePower >= 180) {
+        total += applyScore(factors, penalties, "commute_engine_power", -10, "Higher power than needed for commuting");
+      }
     }
   }
 
-  const powertrain = normalizePowertrainCategory(car.powertrain_category ?? car.fuel_type);
   if (inputs.powertrainPreference !== "any") {
     if (inputs.powertrainPreference === powertrain) {
-      total += 8;
-      factors.push(scoreFactor("powertrain_fit", 8, "Matches powertrain preference"));
+      total += applyScore(factors, penalties, "powertrain_fit", 14, "Matches powertrain preference");
     } else {
-      total -= 8;
-      penalties.push("Powertrain differs from your preference");
+      total += applyScore(factors, penalties, "powertrain_fit", -16, "Powertrain differs from your preference");
     }
   }
 
   if (car.data_quality?.confidence != null) {
     const confidenceBoost = Math.round((car.data_quality.confidence - 0.7) * 10);
     if (confidenceBoost > 0) {
-      total += confidenceBoost;
-      factors.push(scoreFactor("data_confidence", confidenceBoost, "High data confidence"));
+      total += applyScore(factors, penalties, "data_confidence", confidenceBoost, "High data confidence");
     }
   }
 
