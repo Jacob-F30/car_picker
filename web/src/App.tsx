@@ -24,30 +24,22 @@ export default function App() {
   const brandOptions = ["any", ...brands];
 
   useEffect(() => {
-    const controller = new AbortController();
-    getBrands(controller.signal)
+    getBrands()
       .then(setBrands)
-      .catch((error: unknown) => {
-        if ((error as Error).name !== "AbortError") {
-          setLoadError("Could not load available brands from the static catalog.");
-        }
+      .catch(() => {
+        setLoadError("Could not load available brands from the static catalog.");
       });
-    return () => controller.abort();
   }, []);
 
   useEffect(() => {
-    const controller = new AbortController();
     setLoading(true);
     setLoadError(null);
-    getRecommendations(deferredInputs, controller.signal)
+    getRecommendations(deferredInputs)
       .then(setTop)
-      .catch((error: unknown) => {
-        if ((error as Error).name !== "AbortError") {
-          setLoadError("Could not load recommendations from the static catalog.");
-        }
+      .catch(() => {
+        setLoadError("Could not load recommendations from the static catalog.");
       })
       .finally(() => setLoading(false));
-    return () => controller.abort();
   }, [deferredInputs]);
 
   const hasFallback = top.some((car) => car.recommendation_mode === "fallback");
