@@ -8,7 +8,7 @@ type RecommendationCardProps = {
 };
 
 function formatPowertrain(value: string | null): string | null {
-  return value ? value.replaceAll("_", " ") : null;
+  return value ? value.split("_").join(" ") : null;
 }
 
 function formatEngine(car: Recommendation): string | null {
@@ -18,11 +18,16 @@ function formatEngine(car: Recommendation): string | null {
   return parts.length ? parts.join(" / ") : null;
 }
 
+function formatFuelConsumption(value: number | null): string | null {
+  return value != null ? `${value.toFixed(1)} L/100km` : null;
+}
+
 export function RecommendationCard({ car, rank, purpose }: RecommendationCardProps) {
   const subtitle = [car.year, car.trim, car.body_style].filter(Boolean).join(" · ");
   const specs = [
     formatPowertrain(car.powertrain_category),
     formatEngine(car),
+    formatFuelConsumption(car.fuel_consumption_l_100km),
     car.seats != null ? `${car.seats} seats` : null,
     car.safety_rating != null ? `${car.safety_rating}-star safety` : null,
   ].filter(Boolean);
